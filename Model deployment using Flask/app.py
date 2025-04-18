@@ -39,7 +39,7 @@ def setup_logging():
 # Initialize Flask application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'you-should-change-this-in-production'
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'Uploads')
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max upload size
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
@@ -158,7 +158,6 @@ def extract_text_from_url(url):
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        # Extract text from common article tags
         for tag in ['header', 'nav', 'footer', 'script', 'style']:
             for element in soup.find_all(tag):
                 element.decompose()
@@ -169,7 +168,6 @@ def extract_text_from_url(url):
         return ""
 
 def analyze_content(text):
-    # Simple heuristic to identify fake news factors
     fake_indicators = [
         ("unnamed sources", "Use of unnamed sources"),
         ("you won’t believe", "Clickbait phrasing"),
@@ -182,13 +180,77 @@ def analyze_content(text):
         if pattern in text.lower():
             fake_factors.append(description)
     
-    # Placeholder for references (ideally from a source verification API)
     references = []
     trusted_domains = ['bbc.com', 'reuters.com', 'nytimes.com', 'gov.', 'edu.']
     if any(domain in text.lower() for domain in trusted_domains):
         references = [f"Source: {domain}" for domain in trusted_domains if domain in text.lower()]
     
     return fake_factors, references
+
+# Placeholder function for advanced text analysis (to be implemented)
+def advanced_text_analysis(text):
+    # TODO: Implement real analysis using NLP libraries like TextBlob, spaCy, or VADER
+    # For now, return placeholder values based on simple heuristics
+    sentiment_score = 48  # 0-100, neutral
+    sentiment_label = "Neutral"
+    if "positive" in text.lower() or "good" in text.lower():
+        sentiment_score = 75
+        sentiment_label = "Positive"
+    elif "negative" in text.lower() or "bad" in text.lower():
+        sentiment_score = 25
+        sentiment_label = "Negative"
+    
+    emotional_score = 35  # 0-100
+    emotional_label = "Low"
+    if "shock" in text.lower() or "amazing" in text.lower():
+        emotional_score = 70
+        emotional_label = "High"
+    
+    sensationalism_score = 30  # 0-100
+    sensationalism_label = "Low"
+    if "you won't believe" in text.lower() or "shocking" in text.lower():
+        sensationalism_score = 80
+        sensationalism_label = "High"
+    
+    complexity_score = 72  # 0-100
+    complexity_label = "Moderate"
+    word_count = len(text.split())
+    if word_count > 100:
+        complexity_score = 85
+        complexity_label = "High"
+    elif word_count < 20:
+        complexity_score = 40
+        complexity_label = "Low"
+    
+    bias_score = 35  # 0-100
+    bias_label = "Low"
+    if "opinion" in text.lower() or "believe" in text.lower():
+        bias_score = 60
+        bias_label = "Moderate"
+    
+    source_transparency_score = 68  # 0-100
+    source_transparency_label = "Good"
+    if "source" in text.lower() or any(domain in text.lower() for domain in ['bbc.com', 'reuters.com']):
+        source_transparency_score = 90
+        source_transparency_label = "Excellent"
+    elif "anonymous" in text.lower():
+        source_transparency_score = 20
+        source_transparency_label = "Poor"
+    
+    return {
+        "sentiment_score": sentiment_score,
+        "sentiment_label": sentiment_label,
+        "emotional_score": emotional_score,
+        "emotional_label": emotional_label,
+        "sensationalism_score": sensationalism_score,
+        "sensationalism_label": sensationalism_label,
+        "complexity_score": complexity_score,
+        "complexity_label": complexity_label,
+        "bias_score": bias_score,
+        "bias_label": bias_label,
+        "source_transparency_score": source_transparency_score,
+        "source_transparency_label": source_transparency_label
+    }
 
 MODEL = None
 
@@ -202,7 +264,39 @@ def index():
             app.logger.error(f"Failed to load model: {str(e)}")
             flash("The prediction model is currently unavailable. Please try again later.", "error")
     
-    return render_template("index.html")
+    # Define default template variables
+    template_vars = {
+        "result": None,
+        "confidence": None,
+        "probabilities": {"fake": None, "real": None},
+        "txt": "",
+        "url": "",
+        "image_url": None,
+        "document_url": None,
+        "document_name": None,
+        "fake_factors": [],
+        "references": [],
+        "timestamp": None,
+        "current_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "analysis_data_points": 12,  # Placeholder
+        "sentiment_score": None,
+        "sentiment_label": None,
+        "emotional_score": None,
+        "emotional_label": None,
+        "sensationalism_score": None,
+        "sensationalism_label": None,
+        "complexity_score": None,
+        "complexity_label": None,
+        "bias_score": None,
+        "bias_label": None,
+        "source_transparency_score": None,
+        "source_transparency_label": None,
+        "recommendation_1": "Cross-reference with established news sources or fact-checking websites.",
+        "recommendation_2": "Verify the credibility of the source or author.",
+        "recommendation_3": "Seek multiple perspectives for a balanced understanding."
+    }
+    
+    return render_template("index.html", **template_vars)
 
 @app.route('/', methods=['POST'])
 def predict():
@@ -229,7 +323,7 @@ def predict():
         # Validate input
         if not (text or image or document or url):
             flash("Please provide at least one input (text, image, document, or URL).", "warning")
-            return render_template("index.html")
+            return render_template("index.html", txt=text, url=url)
         
         # Process inputs
         try:
@@ -240,11 +334,11 @@ def predict():
             if image:
                 if image.mimetype not in ['image/jpeg', 'image/png']:
                     flash("Invalid image format. Please upload a jpg or png file.", "warning")
-                    return render_template("index.html")
+                    return render_template("index.html", txt=text, url=url)
                 filename = secure_filename(image.filename)
                 image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 image.save(image_path)
-                image_url = url_for('static', filename=f'uploads/{filename}')
+                image_url = url_for('static', filename=f'Uploads/{filename}')
                 extracted_text = extract_text_from_image(image_path)
                 processed_text += " " + extracted_text if processed_text else extracted_text
                 app.logger.info(f"Processed image input: {extracted_text[:50]}...")
@@ -252,11 +346,11 @@ def predict():
             if document:
                 if document.mimetype not in ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
                     flash("Invalid document format. Please upload a docx or pdf file.", "warning")
-                    return render_template("index.html")
+                    return render_template("index.html", txt=text, url=url)
                 filename = secure_filename(document.filename)
                 document_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 document.save(document_path)
-                document_url = url_for('static', filename=f'uploads/{filename}')
+                document_url = url_for('static', filename=f'Uploads/{filename}')
                 document_name = filename
                 if document.mimetype == 'application/pdf':
                     extracted_text = extract_text_from_pdf(document_path)
@@ -278,13 +372,16 @@ def predict():
             # Analyze content for fake factors and references
             fake_factors, references = analyze_content(processed_text)
             
+            # Perform advanced text analysis
+            analysis_results = advanced_text_analysis(processed_text)
+            
             # Perform prediction
             text_series = pd.Series([processed_text])
             prediction = MODEL.predict(text_series)
             
             # Get confidence score and prediction probabilities
             confidence = None
-            probabilities = None
+            probabilities = {"fake": None, "real": None}
             if hasattr(MODEL, 'predict_proba'):
                 try:
                     proba = MODEL.predict_proba(text_series)
@@ -311,7 +408,24 @@ def predict():
                 "document_name": document_name,
                 "fake_factors": fake_factors or ["No specific factors identified"],
                 "references": references or ["No verified sources identified"],
-                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "current_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "analysis_data_points": 12,  # Placeholder
+                "sentiment_score": analysis_results["sentiment_score"],
+                "sentiment_label": analysis_results["sentiment_label"],
+                "emotional_score": analysis_results["emotional_score"],
+                "emotional_label": analysis_results["emotional_label"],
+                "sensationalism_score": analysis_results["sensationalism_score"],
+                "sensationalism_label": analysis_results["sensationalism_label"],
+                "complexity_score": analysis_results["complexity_score"],
+                "complexity_label": analysis_results["complexity_label"],
+                "bias_score": analysis_results["bias_score"],
+                "bias_label": analysis_results["bias_label"],
+                "source_transparency_score": analysis_results["source_transparency_score"],
+                "source_transparency_label": analysis_results["source_transparency_label"],
+                "recommendation_1": "Cross-reference with established news sources or fact-checking websites.",
+                "recommendation_2": "Verify the credibility of the source or author.",
+                "recommendation_3": "Seek multiple perspectives for a balanced understanding."
             }
             
             return render_template("index.html", **template_vars)
