@@ -8,10 +8,18 @@ import logging
 from logging.handlers import RotatingFileHandler
 import numpy as np
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.utils import secure_filename
 import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
+import pytesseract
+from PIL import Image
+import docx
+import PyPDF2
+import requests
+from bs4 import BeautifulSoup
+import datetime
 
 # Configure logging
 def setup_logging():
@@ -31,7 +39,13 @@ def setup_logging():
 # Initialize Flask application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'you-should-change-this-in-production'
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max upload size
 app.wsgi_app = ProxyFix(app.wsgi_app)
+
+# Ensure upload folder exists
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
 if not app.debug:
     setup_logging()
@@ -89,25 +103,7 @@ def create_fallback_model():
     fallback_model.fit(dummy_texts, dummy_labels)
     app.logger.info("Fallback model created and fitted")
     return fallback_model
-# In your model training code:
-def enhance_model():
-    # Add more fake news indicators to training data
-    fake_patterns = [
-        ("unnamed sources", 0.9),  # High weight for unnamed sources
-        ("according to leaked documents", 0.85),
-        ("resistance is futile", 1.0),  # Very high weight for known fake phrases
-        ("mandatory implantation", 0.8),
-        ("jail time for non-compliance", 0.75)
-    ]
-    
-    # Add more reliable sources to training data
-    real_news_samples = scrape_trusted_news_sources()
-    
-    # Add sentiment analysis component
-    from textblob import TextBlob
-    def sentiment_analysis(text):
-        analysis = TextBlob(text)
-        return analysis.sentiment.polarity
+
 def preprocess_text(text):
     if not isinstance(text, str):
         return ""
@@ -126,6 +122,73 @@ def preprocess_text(text):
     except Exception as e:
         app.logger.error(f"Error in text preprocessing: {str(e)}")
         return text
+
+def extract_text_from_image(image_file):
+    try:
+        image = Image.open(image_file)
+        text = pytesseract.image_to_string(image)
+        return preprocess_text(text)
+    except Exception as e:
+        app.logger.error(f"Error extracting text from image: {str(e)}")
+        return ""
+
+def extract_text_from_docx(docx_file):
+    try:
+        doc = docx.Document(docx_file)
+        text = "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
+        return preprocess_text(text)
+    except Exception as e:
+        app.logger.error(f"Error extracting text from docx: {str(e)}")
+        return ""
+
+def extract_text_from_pdf(pdf_file):
+    try:
+        reader = PyPDF2.PdfReader(pdf_file)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+        return preprocess_text(text)
+    except Exception as e:
+        app.logger.error(f"Error extracting text from pdf: {str(e)}")
+        return ""
+
+def extract_text_from_url(url):
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
+        # Extract text from common article tags
+        for tag in ['header', 'nav', 'footer', 'script', 'style']:
+            for element in soup.find_all(tag):
+                element.decompose()
+        text = soup.get_text(separator=' ', strip=True)
+        return preprocess_text(text)
+    except Exception as e:
+        app.logger.error(f"Error extracting text from URL: {str(e)}")
+        return ""
+
+def analyze_content(text):
+    # Simple heuristic to identify fake news factors
+    fake_indicators = [
+        ("unnamed sources", "Use of unnamed sources"),
+        ("you won’t believe", "Clickbait phrasing"),
+        ("shocking revelation", "Sensationalist language"),
+        ("conspiracy", "Conspiracy theory references"),
+        ("urgent warning", "Alarmist tone")
+    ]
+    fake_factors = []
+    for pattern, description in fake_indicators:
+        if pattern in text.lower():
+            fake_factors.append(description)
+    
+    # Placeholder for references (ideally from a source verification API)
+    references = []
+    trusted_domains = ['bbc.com', 'reuters.com', 'nytimes.com', 'gov.', 'edu.']
+    if any(domain in text.lower() for domain in trusted_domains):
+        references = [f"Source: {domain}" for domain in trusted_domains if domain in text.lower()]
+    
+    return fake_factors, references
 
 MODEL = None
 
@@ -153,29 +216,75 @@ def predict():
                 flash("The prediction model is currently unavailable. Please try again later.", "error")
                 return render_template("index.html")
         
-        raw_text = request.form.get('txt', '')
+        # Initialize variables
+        text = request.form.get('txt', '').strip()
+        image = request.files.get('image')
+        document = request.files.get('document')
+        url = request.form.get('url', '').strip()
+        processed_text = ""
+        image_url = None
+        document_url = None
+        document_name = None
         
-        if not raw_text or raw_text.strip() == '':
-            flash("Please enter some text to analyze.", "warning")
+        # Validate input
+        if not (text or image or document or url):
+            flash("Please provide at least one input (text, image, document, or URL).", "warning")
             return render_template("index.html")
-            
-        safe_log_text = raw_text[:50] + '...' if len(raw_text) > 50 else raw_text
-        app.logger.info(f"Processing new prediction request: {safe_log_text}")
         
+        # Process inputs
         try:
-            processed_text = preprocess_text(raw_text)
+            if text:
+                processed_text = preprocess_text(text)
+                app.logger.info(f"Processed text input: {processed_text[:50]}...")
             
+            if image:
+                if image.mimetype not in ['image/jpeg', 'image/png']:
+                    flash("Invalid image format. Please upload a jpg or png file.", "warning")
+                    return render_template("index.html")
+                filename = secure_filename(image.filename)
+                image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                image.save(image_path)
+                image_url = url_for('static', filename=f'uploads/{filename}')
+                extracted_text = extract_text_from_image(image_path)
+                processed_text += " " + extracted_text if processed_text else extracted_text
+                app.logger.info(f"Processed image input: {extracted_text[:50]}...")
+            
+            if document:
+                if document.mimetype not in ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
+                    flash("Invalid document format. Please upload a docx or pdf file.", "warning")
+                    return render_template("index.html")
+                filename = secure_filename(document.filename)
+                document_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                document.save(document_path)
+                document_url = url_for('static', filename=f'uploads/{filename}')
+                document_name = filename
+                if document.mimetype == 'application/pdf':
+                    extracted_text = extract_text_from_pdf(document_path)
+                else:
+                    extracted_text = extract_text_from_docx(document_path)
+                processed_text += " " + extracted_text if processed_text else extracted_text
+                app.logger.info(f"Processed document input: {extracted_text[:50]}...")
+            
+            if url:
+                extracted_text = extract_text_from_url(url)
+                processed_text += " " + extracted_text if processed_text else extracted_text
+                app.logger.info(f"Processed URL input: {extracted_text[:50]}...")
+            
+            # Validate processed text
             if not processed_text or processed_text.strip() == '':
-                flash("After preprocessing, no meaningful text remained. Please try with different content.", "warning")
-                return render_template("index.html", input_text=raw_text)
+                flash("No meaningful text could be extracted from the provided inputs.", "warning")
+                return render_template("index.html", txt=text, url=url)
             
+            # Analyze content for fake factors and references
+            fake_factors, references = analyze_content(processed_text)
+            
+            # Perform prediction
             text_series = pd.Series([processed_text])
             prediction = MODEL.predict(text_series)
             
             # Get confidence score and prediction probabilities
             confidence = None
             probabilities = None
-            
             if hasattr(MODEL, 'predict_proba'):
                 try:
                     proba = MODEL.predict_proba(text_series)
@@ -188,21 +297,30 @@ def predict():
                     app.logger.warning(f"Couldn't get prediction probability: {str(e)}")
             
             result = int(prediction[0])
-            app.logger.info(f"Prediction result: {result}, Confidence: {confidence}")
+            app.logger.info(f"Prediction result: {result}, Confidence: {confidence}, Probabilities: {probabilities}")
             
-            return render_template(
-                "index.html", 
-                result=result,
-                confidence=confidence,
-                probabilities=probabilities,
-                input_text=raw_text
-            )
+            # Prepare template variables
+            template_vars = {
+                "result": result,
+                "confidence": confidence,
+                "probabilities": probabilities,
+                "txt": text,
+                "url": url,
+                "image_url": image_url,
+                "document_url": document_url,
+                "document_name": document_name,
+                "fake_factors": fake_factors or ["No specific factors identified"],
+                "references": references or ["No verified sources identified"],
+                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            
+            return render_template("index.html", **template_vars)
             
         except Exception as e:
             app.logger.error(f"Error during prediction: {str(e)}")
             flash(f"An error occurred during analysis. Please try again.", "error")
-            return render_template("index.html", input_text=raw_text)
-
+            return render_template("index.html", txt=text, url=url)
+        
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
