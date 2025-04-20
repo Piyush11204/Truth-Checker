@@ -1,0 +1,108 @@
+2025-04-20 23:21:59,150 INFO: Fake News Detector startup [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:51]
+2025-04-20 23:22:04,622 INFO: Fake News Detector startup [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:51]
+2025-04-20 23:22:04,831 WARNING: Creating fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:76]
+2025-04-20 23:22:04,832 INFO: Creating fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:80]
+2025-04-20 23:22:04,838 INFO: Fallback model created and fitted [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:95]
+2025-04-20 23:22:04,862 ERROR: Error in advanced text analysis: 
+Looks like you are missing some required data for this feature.
+
+To download the necessary data, simply run
+
+    python -m textblob.download_corpora
+
+or use the NLTK downloader to download the missing data: http://nltk.org/data.html
+If this doesn't fix the problem, file an issue at https://github.com/sloria/TextBlob/issues.
+ [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:240]
+2025-04-20 23:22:12,287 INFO: Fake News Detector startup [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:51]
+2025-04-20 23:23:34,642 WARNING: Creating fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:76]
+2025-04-20 23:23:34,642 INFO: Creating fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:80]
+2025-04-20 23:23:34,648 INFO: Fallback model created and fitted [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:95]
+2025-04-20 23:23:34,655 ERROR: Error in advanced text analysis: 
+Looks like you are missing some required data for this feature.
+
+To download the necessary data, simply run
+
+    python -m textblob.download_corpora
+
+or use the NLTK downloader to download the missing data: http://nltk.org/data.html
+If this doesn't fix the problem, file an issue at https://github.com/sloria/TextBlob/issues.
+ [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:240]
+2025-04-20 23:23:48,252 INFO: Fake News Detector startup [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:51]
+2025-04-20 23:23:53,559 INFO: Fake News Detector startup [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:51]
+2025-04-20 23:23:53,924 WARNING: Creating fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:76]
+2025-04-20 23:23:53,925 INFO: Creating fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:80]
+2025-04-20 23:23:53,931 INFO: Fallback model created and fitted [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:95]
+2025-04-20 23:23:53,938 ERROR: Error in advanced text analysis: 
+Looks like you are missing some required data for this feature.
+
+To download the necessary data, simply run
+
+    python -m textblob.download_corpora
+
+or use the NLTK downloader to download the missing data: http://nltk.org/data.html
+If this doesn't fix the problem, file an issue at https://github.com/sloria/TextBlob/issues.
+ [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:240]
+2025-04-20 23:23:56,307 ERROR: Error in advanced text analysis: 
+Looks like you are missing some required data for this feature.
+
+To download the necessary data, simply run
+
+    python -m textblob.download_corpora
+
+or use the NLTK downloader to download the missing data: http://nltk.org/data.html
+If this doesn't fix the problem, file an issue at https://github.com/sloria/TextBlob/issues.
+ [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:240]
+2025-04-20 23:27:42,152 INFO: Fake News Detector startup [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:51]
+2025-04-20 23:27:42,406 WARNING: Creating fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:76]
+2025-04-20 23:27:42,407 INFO: Creating fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:80]
+2025-04-20 23:27:42,416 INFO: Fallback model created and fitted [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:95]
+2025-04-20 23:27:42,435 ERROR: Error in advanced text analysis: 
+Looks like you are missing some required data for this feature.
+
+To download the necessary data, simply run
+
+    python -m textblob.download_corpora
+
+or use the NLTK downloader to download the missing data: http://nltk.org/data.html
+If this doesn't fix the problem, file an issue at https://github.com/sloria/TextBlob/issues.
+ [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:240]
+2025-04-20 23:29:35,092 INFO: Processed text input: title nasa confirms water molecules on sunlit surf... [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:308]
+2025-04-20 23:29:35,745 INFO: Processed URL input: no cbse day boarding school in dehradun rtl ltr x ... [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:371]
+2025-04-20 23:29:42,034 INFO: Fake News Detector startup [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:51]
+2025-04-20 23:29:42,268 WARNING: Creating fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:76]
+2025-04-20 23:29:42,269 INFO: Creating fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:80]
+2025-04-20 23:29:42,275 INFO: Fallback model created and fitted [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:95]
+2025-04-20 23:29:42,280 INFO: Processed text input: title nasa confirms water molecules on sunlit surf... [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:308]
+2025-04-20 23:29:42,788 INFO: Processed URL input: no cbse day boarding school in dehradun rtl ltr x ... [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:371]
+2025-04-20 23:29:42,795 ERROR: Error in advanced text analysis: 
+Looks like you are missing some required data for this feature.
+
+To download the necessary data, simply run
+
+    python -m textblob.download_corpora
+
+or use the NLTK downloader to download the missing data: http://nltk.org/data.html
+If this doesn't fix the problem, file an issue at https://github.com/sloria/TextBlob/issues.
+ [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:240]
+2025-04-20 23:29:42,820 INFO: Prediction probabilities: {'fake': 45.8035079377687, 'real': 54.19649206223123} [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:400]
+2025-04-20 23:29:42,821 INFO: Prediction result: 1, Confidence: 54.19649206223123, Probabilities: {'fake': 45.8035079377687, 'real': 54.19649206223123} [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:404]
+2025-04-20 23:30:25,960 INFO: Processed text input: title nasa confirms earth will go dark for days in... [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:308]
+2025-04-20 23:30:26,450 INFO: Processed URL input: no cbse day boarding school in dehradun rtl ltr x ... [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:371]
+2025-04-20 23:30:26,461 ERROR: Error in advanced text analysis: 
+Looks like you are missing some required data for this feature.
+
+To download the necessary data, simply run
+
+    python -m textblob.download_corpora
+
+or use the NLTK downloader to download the missing data: http://nltk.org/data.html
+If this doesn't fix the problem, file an issue at https://github.com/sloria/TextBlob/issues.
+ [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:240]
+2025-04-20 23:30:26,480 INFO: Prediction probabilities: {'fake': 46.18827448525628, 'real': 53.8117255147438} [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:400]
+2025-04-20 23:30:26,481 INFO: Prediction result: 1, Confidence: 53.8117255147438, Probabilities: {'fake': 46.18827448525628, 'real': 53.8117255147438} [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:404]
+2025-04-20 23:30:56,531 INFO: Fake News Detector startup [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:37]
+2025-04-20 23:30:58,288 INFO: Loading model from: D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model.pkl [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:63]
+2025-04-20 23:30:59,175 ERROR: Model loaded but failed validation: Pipeline is not fitted yet. [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:73]
+2025-04-20 23:30:59,175 WARNING: Creating fallback model as no valid model was found [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:79]
+2025-04-20 23:30:59,176 INFO: Creating a basic fallback model [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:87]
+2025-04-20 23:30:59,182 INFO: Fallback model created and fitted [in D:\LSOYS APP AND GAMES\New folder\Fake_news_Detection\Model deployment using Flask\app.py:104]

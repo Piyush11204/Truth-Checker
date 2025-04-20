@@ -1,217 +1,198 @@
-from flask import Flask, render_template, request, flash, redirect, url_for
-import joblib
-import re
-import string
-import pandas as pd
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField
+from werkzeug.utils import secure_filename
 import os
-import logging
-from logging.handlers import RotatingFileHandler
-import numpy as np
+import datetime
 from werkzeug.middleware.proxy_fix import ProxyFix
-import pickle
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.pipeline import Pipeline
 
-# Configure logging
-def setup_logging():
-    if not os.path.exists('logs'):
-        os.mkdir('logs')
-    
-    file_handler = RotatingFileHandler('logs/fake_news_detector.log', maxBytes=10240, backupCount=10)
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-    ))
-    file_handler.setLevel(logging.INFO)
-    
-    app.logger.addHandler(file_handler)
-    app.logger.setLevel(logging.INFO)
-    app.logger.info('Fake News Detector startup')
+# Your ML model imports here (if any)
+# import joblib
+# model = joblib.load('your_model.pkl')
 
-# Initialize Flask application
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'you-should-change-this-in-production'
+app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
-if not app.debug:
-    setup_logging()
+# Ensure upload directory exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-def load_model():
-    try:
-        possible_paths = [
-            os.path.join(os.path.dirname(__file__), "Model.pkl"),
-            os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)), "Model.pkl"),
-            os.path.join(os.path.abspath(os.path.dirname(__file__)), "models", "Model.pkl")
-        ]
-        
-        for path in possible_paths:
-            if os.path.exists(path):
-                app.logger.info(f"Loading model from: {path}")
-                try:
-                    model = joblib.load(path)
-                    if hasattr(model, 'predict'):
-                        try:
-                            dummy_text = pd.Series(["This is a test example"])
-                            model.predict(dummy_text)
-                            app.logger.info("Model successfully validated")
-                            return model
-                        except Exception as e:
-                            app.logger.error(f"Model loaded but failed validation: {str(e)}")
-                    else:
-                        app.logger.error("Loaded object is not a valid model")
-                except Exception as e:
-                    app.logger.error(f"Error loading model from {path}: {str(e)}")
-        
-        app.logger.warning("Creating fallback model as no valid model was found")
-        return create_fallback_model()
-    
-    except Exception as e:
-        app.logger.error(f"Failed to load the model: {str(e)}")
-        return create_fallback_model()
+# Form definition
+class NewsForm(FlaskForm):
+    txt = StringField('News Text')
+    image = FileField('News Image', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
+    document = FileField('News Document', validators=[FileAllowed(['pdf', 'docx'], 'PDFs and Word Docs only!')])
+    url = StringField('News URL')
 
-def create_fallback_model():
-    app.logger.info("Creating a basic fallback model")
-    fallback_model = Pipeline([
-        ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
-        ('classifier', MultinomialNB())
-    ])
-    
-    dummy_texts = [
-        "This is real news about politics and events",
-        "Breaking news from reliable sources about economy",
-        "Factual reporting on international relations",
-        "Fake news conspiracy theories aliens control government",
-        "Click bait fake headlines shocking revelations",
-        "You won't believe this outrageous fake claim"
-    ]
-    dummy_labels = [1, 1, 1, 0, 0, 0]
-    
-    fallback_model.fit(dummy_texts, dummy_labels)
-    app.logger.info("Fallback model created and fitted")
-    return fallback_model
-# In your model training code:
-def enhance_model():
-    # Add more fake news indicators to training data
-    fake_patterns = [
-        ("unnamed sources", 0.9),  # High weight for unnamed sources
-        ("according to leaked documents", 0.85),
-        ("resistance is futile", 1.0),  # Very high weight for known fake phrases
-        ("mandatory implantation", 0.8),
-        ("jail time for non-compliance", 0.75)
-    ]
-    
-    # Add more reliable sources to training data
-    real_news_samples = scrape_trusted_news_sources()
-    
-    # Add sentiment analysis component
-    from textblob import TextBlob
-    def sentiment_analysis(text):
-        analysis = TextBlob(text)
-        return analysis.sentiment.polarity
-def preprocess_text(text):
-    if not isinstance(text, str):
-        return ""
-    
-    try:
-        text = text.lower()
-        text = re.sub(r'\[.*?\]', '', text)
-        text = re.sub("\\W", " ", text)
-        text = re.sub(r'https?://\S+|www\.\S+', '', text)
-        text = re.sub('<.*?>+', '', text)
-        text = re.sub('[%s]' % re.escape(string.punctuation), '', text)
-        text = re.sub('\n', '', text)
-        text = re.sub(r'\w*\d\w*', '', text)
-        text = re.sub(r'\s+', ' ', text).strip()
-        return text
-    except Exception as e:
-        app.logger.error(f"Error in text preprocessing: {str(e)}")
-        return text
+# Sample data for fake news indicators - in production, these would come from your model
+fake_factors = [
+    "Excessive use of emotional language",
+    "Lack of verifiable sources",
+    "Inconsistencies in narrative",
+    "Clickbait headline structure"
+]
 
-MODEL = None
+# Sample data for real news references - in production, these would come from your model
+references = [
+    "Verified by multiple credible sources",
+    "Contains proper citations and references",
+    "Balanced presentation of facts",
+    "Author credentials verified"
+]
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    global MODEL
-    if MODEL is None:
-        try:
-            MODEL = load_model()
-        except Exception as e:
-            app.logger.error(f"Failed to load model: {str(e)}")
-            flash("The prediction model is currently unavailable. Please try again later.", "error")
+    form = NewsForm()
     
-    return render_template("index.html")
+    # Initialize template variables with default values
+    template_vars = {
+        'form': form,
+        'current_time': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        # Default values for safety
+        'probabilities': {'fake': 45.0, 'real': 55.0},
+        'confidence': 75.5,
+        'analysis_data_points': 12,
+        'fake_factors': fake_factors,
+        'references': references,
+        'sentiment_score': 48,
+        'sentiment_label': 'Neutral',
+        'emotional_score': 35,
+        'emotional_label': 'Low',
+        'sensationalism_score': 30,
+        'sensationalism_label': 'Low',
+        'complexity_score': 72,
+        'complexity_label': 'Moderate',
+        'bias_score': 35,
+        'bias_label': 'Low',
+        'source_transparency_score': 68,
+        'source_transparency_label': 'Good',
+        'recommendation_1': 'Cross-reference with established news sources or fact-checking websites.',
+        'recommendation_2': 'Verify the credibility of the source or author.',
+        'recommendation_3': 'Seek multiple perspectives for a balanced understanding.'
+    }
+    
+    return render_template("index.html", **template_vars)
 
-@app.route('/', methods=['POST'])
+@app.route('/predict', methods=['POST'])
 def predict():
-    if request.method == 'POST':
-        global MODEL
-        if MODEL is None:
-            try:
-                MODEL = load_model()
-            except Exception as e:
-                app.logger.error(f"Failed to load model on demand: {str(e)}")
-                flash("The prediction model is currently unavailable. Please try again later.", "error")
-                return render_template("index.html")
+    form = NewsForm()
+    
+    if form.validate_on_submit():
+        txt = form.txt.data
+        url = form.url.data
+        image = form.image.data
+        document = form.document.data
         
-        raw_text = request.form.get('txt', '')
+        image_url = None
+        document_url = None
+        document_name = None
         
-        if not raw_text or raw_text.strip() == '':
-            flash("Please enter some text to analyze.", "warning")
-            return render_template("index.html")
-            
-        safe_log_text = raw_text[:50] + '...' if len(raw_text) > 50 else raw_text
-        app.logger.info(f"Processing new prediction request: {safe_log_text}")
+        # Process uploaded image if any
+        if image:
+            filename = secure_filename(image.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image.save(image_path)
+            image_url = url_for('static', filename=f'uploads/{filename}')
         
-        try:
-            processed_text = preprocess_text(raw_text)
-            
-            if not processed_text or processed_text.strip() == '':
-                flash("After preprocessing, no meaningful text remained. Please try with different content.", "warning")
-                return render_template("index.html", input_text=raw_text)
-            
-            text_series = pd.Series([processed_text])
-            prediction = MODEL.predict(text_series)
-            
-            # Get confidence score and prediction probabilities
-            confidence = None
-            probabilities = None
-            
-            if hasattr(MODEL, 'predict_proba'):
-                try:
-                    proba = MODEL.predict_proba(text_series)
-                    confidence = float(np.max(proba) * 100)
-                    probabilities = {
-                        'fake': float(proba[0][0] * 100),
-                        'real': float(proba[0][1] * 100)
-                    }
-                except Exception as e:
-                    app.logger.warning(f"Couldn't get prediction probability: {str(e)}")
-            
-            result = int(prediction[0])
-            app.logger.info(f"Prediction result: {result}, Confidence: {confidence}")
-            
-            return render_template(
-                "index.html", 
-                result=result,
-                confidence=confidence,
-                probabilities=probabilities,
-                input_text=raw_text
-            )
-            
-        except Exception as e:
-            app.logger.error(f"Error during prediction: {str(e)}")
-            flash(f"An error occurred during analysis. Please try again.", "error")
-            return render_template("index.html", input_text=raw_text)
+        # Process uploaded document if any
+        if document:
+            filename = secure_filename(document.filename)
+            document_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            document.save(document_path)
+            document_url = url_for('static', filename=f'uploads/{filename}')
+            document_name = filename
+        
+        # In a real application, you'd use your ML model to analyze the content here
+        # For this example, we'll use dummy prediction (0 = fake, 1 = real)
+        # result = model.predict(txt) # Replace with your actual model prediction
+        
+        # Dummy result for demonstration
+        result = 1 if txt and len(txt) > 500 else 0
+        
+        # Calculate probabilities - in production, these would come from your model
+        fake_prob = 35.0 if result == 1 else 75.0
+        real_prob = 100 - fake_prob
+        
+        # Generate confidence score - in production, this would come from your model
+        confidence = 82.3 if result == 1 else 68.9
+        
+        # Detailed analysis scores - in production, these would come from your model
+        if result == 1:
+            sentiment_score = 52
+            sentiment_label = 'Neutral'
+            emotional_score = 28
+            emotional_label = 'Low'
+            sensationalism_score = 20
+            sensationalism_label = 'Very Low'
+            complexity_score = 78
+            complexity_label = 'High'
+            bias_score = 25
+            bias_label = 'Low'
+            source_transparency_score = 82
+            source_transparency_label = 'Excellent'
+        else:
+            sentiment_score = 68
+            sentiment_label = 'Emotional'
+            emotional_score = 72
+            emotional_label = 'High'
+            sensationalism_score = 65
+            sensationalism_label = 'High'
+            complexity_score = 45
+            complexity_label = 'Low'
+            bias_score = 70
+            bias_label = 'High'
+            source_transparency_score = 35
+            source_transparency_label = 'Poor'
+        
+        # Recommendations - in production, these would be dynamically generated
+        if result == 1:
+            recommendation_1 = 'Continue to cross-reference with other sources for completeness.'
+            recommendation_2 = 'Check for recent updates as this information may evolve.'
+            recommendation_3 = 'Consider the context and potential biases even in reliable reporting.'
+        else:
+            recommendation_1 = 'Verify this information with established, credible news sources.'
+            recommendation_2 = 'Check official websites or publications for verification.'
+            recommendation_3 = 'Be cautious about sharing this content without verification.'
+        
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        analysis_data_points = 15
+        
+        return render_template('index.html', 
+            form=form,
+            result=result, 
+            probabilities={'fake': fake_prob, 'real': real_prob}, 
+            confidence=confidence,
+            txt=txt, 
+            url=url,
+            image_url=image_url,
+            document_url=document_url,
+            document_name=document_name,
+            timestamp=timestamp,
+            fake_factors=fake_factors,
+            references=references,
+            analysis_data_points=analysis_data_points,
+            sentiment_score=sentiment_score,
+            sentiment_label=sentiment_label,
+            emotional_score=emotional_score,
+            emotional_label=emotional_label,
+            sensationalism_score=sensationalism_score,
+            sensationalism_label=sensationalism_label,
+            complexity_score=complexity_score,
+            complexity_label=complexity_label,
+            bias_score=bias_score,
+            bias_label=bias_label,
+            source_transparency_score=source_transparency_score,
+            source_transparency_label=source_transparency_label,
+            recommendation_1=recommendation_1,
+            recommendation_2=recommendation_2,
+            recommendation_3=recommendation_3
+        )
+    
+    # If form validation fails, return to the index page
+    flash('Please check your input and try again.', 'error')
+    return redirect(url_for('index'))
 
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
-
-@app.errorhandler(500)
-def internal_server_error(e):
-    app.logger.error(f"Server error: {str(e)}")
-    return render_template('500.html'), 500
-
-if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
