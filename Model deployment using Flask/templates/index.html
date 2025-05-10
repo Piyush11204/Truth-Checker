@@ -7,6 +7,7 @@
     <title>Truth Checker - AI Fake News Detector</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body class="bg-gray-100 text-gray-900 flex flex-col min-h-screen font-sans">
@@ -25,7 +26,7 @@
         </div>
     </nav>
 
-    <main class="container mx-auto px-4 max-w-6xl py-10 flex-grow">
+    <main class="container mx-auto px獻4 max-w-6xl py-10 flex-grow">
         <section class="bg-white rounded-2xl shadow-xl p-8 mb-10">
             <h2 class="text-3xl font-bold text-gray-800 mb-4">Verify News Content</h2>
             <p class="text-gray-600 mb-6 max-w-2xl">Enter news content through text, images (jpg, png), documents (docx, pdf), or URLs to check its authenticity using our advanced AI model.</p>
@@ -40,7 +41,7 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                         placeholder="Paste or type the news content..."
                         aria-describedby="textHelp"
-                        maxlength="10000">{{ request.form['txt'] if request.form['txt'] else '' }}</textarea>
+                        maxlength="10000">{{ txt if txt else '' }}</textarea>
                     <p id="textHelp" class="mt-1 text-xs text-gray-500">Enter up to 10,000 characters of news text.</p>
                 </div>
 
@@ -51,7 +52,7 @@
                         id="newsImage"
                         name="image"
                         accept="image/jpeg,image/png"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-50 focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:ring-2 focus:ring-blue-500"
                         aria-describedby="imageHelp">
                     <p id="imageHelp" class="mt-1 text-xs text-gray-500">Upload jpg or png images (max 5MB).</p>
                 </div>
@@ -63,7 +64,7 @@
                         id="newsDoc"
                         name="document"
                         accept=".docx,application/pdf"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-50 focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:ring-2 focus:ring-blue-500"
                         aria-describedby="docHelp">
                     <p id="docHelp" class="mt-1 text-xs text-gray-500">Upload docx or pdf files (max 10MB).</p>
                 </div>
@@ -77,7 +78,7 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                         placeholder="https://example.com/news"
                         aria-describedby="urlHelp"
-                        value="{{ request.form['url'] if request.form['url'] else '' }}">
+                        value="{{ url if url else '' }}">
                     <p id="urlHelp" class="mt-1 text-xs text-gray-500">Enter a valid news article URL.</p>
                 </div>
 
@@ -108,7 +109,7 @@
             </div>
         </section>
 
-        {% if request.method == 'POST' and (request.form['txt'] or request.files['image'] or request.files['document'] or request.form['url']) %}
+        {% if result is not none %}
         <section class="bg-white rounded-2xl shadow-xl p-8 mb-10">
             <h3 class="text-3xl font-bold text-gray-800 mb-6">Analysis Results</h3>
 
@@ -117,10 +118,10 @@
                     <i class="fas fa-file-alt mr-2 text-blue-600"></i> Input Content
                 </h4>
                 <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                    {% if request.form['txt'] %}
+                    {% if txt %}
                     <div class="mb-4">
                         <p class="font-medium text-gray-700">Text Input:</p>
-                        <p class="text-gray-600 whitespace-pre-wrap break-words">{{ request.form['txt'] }}</p>
+                        <p class="text-gray-600 whitespace-pre-wrap break-words">{{ txt }}</p>
                     </div>
                     {% endif %}
                     {% if image_url %}
@@ -136,10 +137,10 @@
                         <a href="{{ document_url }}" class="text-blue-600 hover:underline mt-1 inline-block" target="_blank">View Document</a>
                     </div>
                     {% endif %}
-                    {% if request.form['url'] %}
+                    {% if url %}
                     <div>
                         <p class="font-medium text-gray-700">URL Input:</p>
-                        <a href="{{ request.form['url'] }}" class="text-blue-600 hover:underline break-all" target="_blank">{{ request.form['url'] }}</a>
+                        <a href="{{ url }}" class="text-blue-600 hover:underline break-all" target="_blank">{{ url }}</a>
                     </div>
                     {% endif %}
                     <p class="mt-4 text-sm text-gray-500 flex items-center">
@@ -154,7 +155,7 @@
                 </h4>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2">
-                        {% if result is defined and result == 0 %}
+                        {% if result == 0 %}
                         <div class="p-6 rounded-lg bg-red-50 border-2 border-red-500 text-center">
                             <p class="text-2xl font-bold text-red-600 flex items-center justify-center">
                                 <i class="fas fa-exclamation-triangle mr-2"></i> Likely Fake News
@@ -170,6 +171,7 @@
                                 <li>No specific factors identified</li>
                                 {% endfor %}
                             </ul>
+                            <p class="text-sm text-red-700 mt-3">Fake Probability: {{ "%.1f"|format(probabilities.fake|default(50.0)) }}%</p>
                         </div>
                         {% else %}
                         <div class="p-6 rounded-lg bg-green-50 border-2 border-green-500 text-center">
@@ -187,16 +189,17 @@
                                 <li>No verified sources identified</li>
                                 {% endfor %}
                             </ul>
+                            <p class="text-sm text-green-700 mt-3">Real Probability: {{ "%.1f"|format(probabilities.real|default(50.0)) }}%</p>
                         </div>
                         {% endif %}
 
                         <div class="mt-6">
                             <div class="flex justify-between items-center mb-2">
                                 <span class="text-sm font-semibold text-gray-700">Model Confidence</span>
-                                <span class="text-sm font-bold text-gray-800">{{ "%.1f"|format(confidence|default(75)) }}%</span>
+                                <span class="text-sm font-bold text-gray-800">{{ "%.1f"|format(confidence|default(50.0)) }}%</span>
                             </div>
                             <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full {{ 'bg-red-500' if result == 0 else 'bg-green-500' }} rounded-full transition-all duration-500" style="width: {{ confidence|default(75) }}%"></div>
+                                <div class="h-full {{ 'bg-red-500' if result == 0 else 'bg-green-500' }} rounded-full transition-all duration-500" style="width: {{ confidence|default(50.0) }}%"></div>
                             </div>
                             <p class="mt-1 text-xs text-gray-500">Based on {{ analysis_data_points|default(10) }} analyzed features</p>
                         </div>
@@ -208,7 +211,7 @@
                             <canvas id="truthMeter"></canvas>
                             <div class="absolute inset-0 flex items-center justify-center">
                                 <div class="text-center">
-                                    <p class="text-3xl font-bold text-gray-800">{{ "%.0f"|format(probabilities.real|default(75)) }}</p>
+                                    <p class="text-3xl font-bold text-gray-800">{{ "%.0f"|format(probabilities.real|default(50.0)) }}</p>
                                     <p class="text-xs text-gray-600">/100</p>
                                 </div>
                             </div>
@@ -309,6 +312,12 @@
                     </li>
                 </ul>
             </div>
+
+            <div class="mt-6 text-center">
+                <button id="downloadReport" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center mx-auto focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                    <i class="fas fa-download mr-2"></i> Download Report
+                </button>
+            </div>
         </section>
         {% endif %}
 
@@ -370,7 +379,7 @@
                 </div>
             </div>
             <div class="mt-8 pt-8 border-t border-gray-800 text-center text-sm text-gray-400">
-                <p>&copy; 2025 Truth Checker. All rights reserved.</p>
+                <p>© 2025 Truth Checker. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -437,7 +446,7 @@
             const truthMeterCanvas = document.getElementById('truthMeter');
             if (truthMeterCanvas) {
                 const ctx = truthMeterCanvas.getContext('2d');
-                const truthScore = {{ probabilities.real|default(75) }};
+                const truthScore = {{ probabilities.real|default(50.0) }};
 
                 new Chart(ctx, {
                     type: 'doughnut',
@@ -456,6 +465,80 @@
                             tooltip: { enabled: false }
                         }
                     }
+                });
+            }
+
+            // Download report
+            const downloadButton = document.getElementById('downloadReport');
+            if (downloadButton) {
+                downloadButton.addEventListener('click', () => {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+
+                    // Header
+                    doc.setFontSize(16);
+                    doc.text('Truth Checker Report', 20, 20);
+                    doc.setFontSize(12);
+                    doc.text(`Analyzed on: {{ timestamp|default(current_time) }}`, 20, 30);
+
+                    // Input Content
+                    doc.text('Input Content:', 20, 40);
+                    let y = 50;
+                    {% if txt %}
+                    doc.text('Text Input:', 20, y);
+                    doc.text('{{ txt }}'.substring(0, 500) + ('{{ txt }}'.length > 500 ? '...' : ''), 20, y + 10, { maxWidth: 160 });
+                    y += 30;
+                    {% endif %}
+                    {% if url %}
+                    doc.text('URL Input:', 20, y);
+                    doc.text('{{ url }}', 20, y + 10, { maxWidth: 160 });
+                    y += 20;
+                    {% endif %}
+                    {% if document_name %}
+                    doc.text('Document Input: {{ document_name }}', 20, y);
+                    y += 10;
+                    {% endif %}
+                    {% if image_url %}
+                    doc.text('Image Input: (Image uploaded, see original report)', 20, y);
+                    y += 10;
+                    {% endif %}
+
+                    // Analysis Results
+                    doc.text('Analysis Results:', 20, y + 10);
+                    doc.text(`Truth Score: {{ "%.0f"|format(probabilities.real|default(50.0)) }}/100`, 20, y + 20);
+                    doc.text(`Result: {% if result == 0 %}Likely Fake News{% else %}Likely Reliable{% endif %}`, 20, y + 30);
+                    doc.text(`{% if result == 0 %}Fake{% else %}Real{% endif %} Probability: {{ "%.1f"|format(probabilities.fake|default(50.0) if result == 0 else probabilities.real|default(50.0)) }}%`, 20, y + 40);
+                    y += 50;
+
+                    // Issues or References
+                    doc.text('{% if result == 0 %}Potential Issues{% else %}Source References{% endif %}:', 20, y);
+                    y += 10;
+                    {% if result == 0 %}
+                    {% for factor in fake_factors %}
+                    doc.text(`- {{ factor }}`, 25, y);
+                    y += 10;
+                    {% else %}
+                    doc.text('- No specific factors identified', 25, y);
+                    y += 10;
+                    {% endfor %}
+                    {% else %}
+                    {% for ref in references %}
+                    doc.text(`- {{ ref }}`, 25, y);
+                    y += 10;
+                    {% else %}
+                    doc.text('- No verified sources identified', 25, y);
+                    y += 10;
+                    {% endfor %}
+                    {% endif %}
+
+                    // Recommendations
+                    doc.text('Recommendations:', 20, y);
+                    doc.text('- {{ recommendation_1|default('Check primary sources for verification.') }}', 25, y + 10);
+                    doc.text('- {{ recommendation_2|default('Compare with reputable news outlets.') }}', 25, y + 20);
+                    doc.text('- {{ recommendation_3|default('Evaluate author credentials.') }}', 25, y + 30);
+
+                    // Save PDF
+                    doc.save('TruthChecker_Report.pdf');
                 });
             }
         });

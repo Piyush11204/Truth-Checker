@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash, url_for
 import joblib
 import re
 import string
@@ -53,7 +53,6 @@ def create_fallback_model():
         ('classifier', MultinomialNB(alpha=0.1))
     ])
     
-    # Expanded dummy dataset for better generalization
     dummy_texts = [
         "Official government report confirms economic growth in Q3",
         "Scientific study reveals new climate change patterns",
@@ -76,11 +75,11 @@ def preprocess_text(text):
         return ""
     
     text = text.lower()
-    text = re.sub(r'https?://\S+|www\.\S+', '', text)  # Remove URLs
-    text = re.sub(r'<.*?>+', '', text)  # Remove HTML tags
-    text = re.sub(r'[^\w\s]', ' ', text)  # Remove punctuation
-    text = re.sub(r'\d+', '', text)  # Remove numbers
-    text = re.sub(r'\s+', ' ', text).strip()  # Normalize whitespace
+    text = re.sub(r'https?://\S+|www\.\S+', '', text)
+    text = re.sub(r'<.*?>+', '', text)
+    text = re.sub(r'[^\w\s]', ' ', text)
+    text = re.sub(r'\d+', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
     return text
 
 def extract_text_from_image(image_file):
@@ -132,7 +131,7 @@ def analyze_content(text):
     ]
     fake_factors = [desc for pattern, desc in fake_indicators if pattern in text.lower()]
     
-    trusted_domains = ['bbc.com', 'reuters.com', 'nytimes.com', 'gov.', 'edu.','ndtv.com','thehindu.com','theguardian.com']
+    trusted_domains = ['bbc.com', 'reuters.com', 'nytimes.com', 'gov.', 'edu.', 'ndtv.com', 'thehindu.com', 'theguardian.com']
     references = [f"Source: {domain}" for domain in trusted_domains if domain in text.lower()]
     
     return fake_factors, references
@@ -142,7 +141,7 @@ def advanced_text_analysis(text):
     unique_words = len(set(text.split()))
     avg_word_length = sum(len(word) for word in text.split()) / max(word_count, 1)
     
-    trusted_domains = ['bbc.com', 'reuters.com', 'nytimes.com', 'gov.', 'edu.']
+    trusted_domains = ['bbc.com', 'reuters.com', 'nytimes.com', 'gov.', 'edu.', 'ndtv.com', 'thehindu.com', 'theguardian.com']
     
     sentiment_score = 50
     sentiment_label = "Neutral"
@@ -189,7 +188,7 @@ def index():
     template_vars = {
         "result": None,
         "confidence": None,
-        "probabilities": {"fake": None, "real": None},
+        "probabilities": {"fake": 50.0, "real": 50.0},  # Default probabilities for initial load
         "txt": "",
         "url": "",
         "image_url": None,
@@ -215,8 +214,8 @@ def predict():
     url = request.form.get('url', '').strip()
     
     if not (text or image or document or url):
-        flash("Please provide at least one input.", "warning")
-        return render_template("index.html", txt=text, url=url)
+        flash("Please provide consolidated least one input.", "warning")
+        return render_template("index.html", txt=text, url=url, probabilities={"fake": 50.0, "real": 50.0})
     
     processed_text = ""
     image_url = document_url = document_name = None
@@ -249,22 +248,25 @@ def predict():
     
     if not processed_text.strip():
         flash("No meaningful text extracted.", "warning")
-        return render_template("index.html", txt=text, url=url)
+        return render_template("index.html", txt=text, url=url, probabilities={"fake": 50.0, "real": 50.0})
     
     fake_factors, references = analyze_content(processed_text)
     analysis_results = advanced_text_analysis(processed_text)
     text_series = pd.Series([processed_text])
     prediction = MODEL.predict(text_series)
     
-    confidence = None
-    probabilities = {"fake": None, "real": None}
-    if hasattr(MODEL, 'predict_proba'):
-        proba = MODEL.predict_proba(text_series)
-        confidence = float(np.max(proba) * 100)
-        probabilities = {
-            'fake': float(proba[0][0] * 100),
-            'real': float(proba[0][1] * 100)
-        }
+    confidence = 50.0  # Default confidence
+    probabilities = {"fake": 50.0, "real": 50.0}  # Default probabilities
+    try:
+        if hasattr(MODEL, 'predict_proba'):
+            proba = MODEL.predict_proba(text_series)
+            confidence = float(np.max(proba) * 100)
+            probabilities = {
+                'fake': float(proba[0][0] * 100),
+                'real': float(proba[0][1] * 100)
+            }
+    except Exception:
+        pass  # Use default values if predict_proba fails
     
     template_vars = {
         "result": int(prediction[0]),
