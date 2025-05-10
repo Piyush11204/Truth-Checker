@@ -26,7 +26,7 @@
         </div>
     </nav>
 
-    <main class="container mx-auto px獻4 max-w-6xl py-10 flex-grow">
+    <main class="container mx-auto px-4 max-w-6xl py-10 flex-grow">
         <section class="bg-white rounded-2xl shadow-xl p-8 mb-10">
             <h2 class="text-3xl font-bold text-gray-800 mb-4">Verify News Content</h2>
             <p class="text-gray-600 mb-6 max-w-2xl">Enter news content through text, images (jpg, png), documents (docx, pdf), or URLs to check its authenticity using our advanced AI model.</p>
@@ -182,9 +182,10 @@
                         </div>
                         <div class="mt-4 p-6 bg-green-50 rounded-lg border border-green-200">
                             <h5 class="font-semibold text-green-800 mb-3">Source References</h5>
-                            <ul class="text-sm text-green-700 list-disc pl-5 space-y-2">
+                            <ul class-\
+                            "text-sm text-green-700 list-disc pl-5 space-y-2">
                                 {% for ref in references %}
-                                <li>{{ ref }}</li>
+                                <li><a href="{{ ref.split('Source: ')[1] if ref.startswith('Source: ') else ref }}" class="text-green-700 hover:underline" target="_blank">{{ ref }}</a></li>
                                 {% else %}
                                 <li>No verified sources identified</li>
                                 {% endfor %}
@@ -192,6 +193,17 @@
                             <p class="text-sm text-green-700 mt-3">Real Probability: {{ "%.1f"|format(probabilities.real|default(50.0)) }}%</p>
                         </div>
                         {% endif %}
+
+                        <div class="mt-4 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                            <h5 class="font-semibold text-gray-800 mb-3">Basis for Decision</h5>
+                            <ul class="text-sm text-gray-700 list-disc pl-5 space-y-2">
+                                {% for reason in decision_basis %}
+                                <li>{{ reason }}</li>
+                                {% else %}
+                                <li>No specific decision basis available</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
 
                         <div class="mt-6">
                             <div class="flex justify-between items-center mb-2">
@@ -201,7 +213,7 @@
                             <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
                                 <div class="h-full {{ 'bg-red-500' if result == 0 else 'bg-green-500' }} rounded-full transition-all duration-500" style="width: {{ confidence|default(50.0) }}%"></div>
                             </div>
-                            <p class="mt-1 text-xs text-gray-500">Based on {{ analysis_data_points|default(10) }} analyzed features</p>
+                            <p class="mt-1 text-xs text-gray-500">Based on {{ analysis_data_points|default(12) }} analyzed features</p>
                         </div>
                     </div>
 
@@ -288,6 +300,17 @@
                                     <div class="h-full bg-blue-500 rounded-full" style="width: {{ credibility_score|default(70) }}%"></div>
                                 </div>
                             </div>
+                            <div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-semibold flex items-center">
+                                        <i class="fas fa-check-double mr-1 text-blue-600"></i> Factual Consistency
+                                    </span>
+                                    <span class="text-xs font-medium text-gray-600">{{ factual_label|default('Moderate') }}</span>
+                                </div>
+                                <div class="mt-2 h-2 bg-gray-200 rounded-full">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: {{ factual_score|default(50) }}%"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -300,15 +323,15 @@
                 <ul class="space-y-3 text-sm text-blue-800">
                     <li class="flex items-start">
                         <i class="fas fa-check-circle mr-2 text-blue-600 mt-1"></i>
-                        {{ recommendation_1|default('Check primary sources for verification.') }}
+                        {{ recommendation_1|default('Cross-reference with primary sources.') }}
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-check-circle mr-2 text-blue-600 mt-1"></i>
-                        {{ recommendation_2|default('Compare with reputable news outlets.') }}
+                        {{ recommendation_2|default('Verify with reputable news outlets.') }}
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-check-circle mr-2 text-blue-600 mt-1"></i>
-                        {{ recommendation_3|default('Evaluate author credentials.') }}
+                        {{ recommendation_3|default('Check author and publication credibility.') }}
                     </li>
                 </ul>
             </div>
@@ -342,10 +365,10 @@
                     </h4>
                     <p class="text-gray-600 mb-4">We assess content reliability through:</p>
                     <ul class="space-y-2 text-gray-600 list-disc pl-5">
-                        <li>Source attribution and transparency</li>
-                        <li>Presence of sensational or biased language</li>
+                        <li>Cross-referencing with trusted news sources</li>
+                        <li>Analysis of linguistic and structural patterns</li>
+                        <li>Verification of metadata (author, date)</li>
                         <li>Consistency with verified information</li>
-                        <li>Structural and linguistic integrity</li>
                     </ul>
                 </div>
             </div>
@@ -441,7 +464,7 @@
             }
         });
 
-        // Initialize truth meter chart
+        // Initialize truth meter chart and download report
         document.addEventListener('DOMContentLoaded', () => {
             const truthMeterCanvas = document.getElementById('truthMeter');
             if (truthMeterCanvas) {
@@ -508,7 +531,8 @@
                     doc.text(`Truth Score: {{ "%.0f"|format(probabilities.real|default(50.0)) }}/100`, 20, y + 20);
                     doc.text(`Result: {% if result == 0 %}Likely Fake News{% else %}Likely Reliable{% endif %}`, 20, y + 30);
                     doc.text(`{% if result == 0 %}Fake{% else %}Real{% endif %} Probability: {{ "%.1f"|format(probabilities.fake|default(50.0) if result == 0 else probabilities.real|default(50.0)) }}%`, 20, y + 40);
-                    y += 50;
+                    doc.text(`Model Confidence: {{ "%.1f"|format(confidence|default(50.0)) }}%`, 20, y + 50);
+                    y += 60;
 
                     // Issues or References
                     doc.text('{% if result == 0 %}Potential Issues{% else %}Source References{% endif %}:', 20, y);
@@ -523,7 +547,7 @@
                     {% endfor %}
                     {% else %}
                     {% for ref in references %}
-                    doc.text(`- {{ ref }}`, 25, y);
+                    doc.text(`- {{ ref }}`, 25, y, { maxWidth: 160 });
                     y += 10;
                     {% else %}
                     doc.text('- No verified sources identified', 25, y);
@@ -531,11 +555,32 @@
                     {% endfor %}
                     {% endif %}
 
+                    // Decision Basis
+                    doc.text('Basis for Decision:', 20, y);
+                    y += 10;
+                    {% for reason in decision_basis %}
+                    doc.text(`- {{ reason }}`, 25, y, { maxWidth: 160 });
+                    y += 10;
+                    {% else %}
+                    doc.text('- No specific decision basis available', 25, y);
+                    y += 10;
+                    {% endfor %}
+
+                    // Metrics
+                    doc.text('Detailed Metrics:', 20, y);
+                    doc.text(`- Sentiment: {{ sentiment_label|default('Neutral') }} ({{ sentiment_score|default(50) }}%)`, 25, y + 10);
+                    doc.text(`- Sensationalism: {{ sensationalism_label|default('Low') }} ({{ sensationalism_score|default(30) }}%)`, 25, y + 20);
+                    doc.text(`- Readability: {{ readability_label|default('Good') }} ({{ readability_score|default(70) }}%)`, 25, y + 30);
+                    doc.text(`- Complexity: {{ complexity_label|default('Moderate') }} ({{ complexity_score|default(72) }}%)`, 25, y + 40);
+                    doc.text(`- Credibility: {{ credibility_label|default('High') }} ({{ credibility_score|default(70) }}%)`, 25, y + 50);
+                    doc.text(`- Factual Consistency: {{ factual_label|default('Moderate') }} ({{ factual_score|default(50) }}%)`, 25, y + 60);
+                    y += 70;
+
                     // Recommendations
                     doc.text('Recommendations:', 20, y);
-                    doc.text('- {{ recommendation_1|default('Check primary sources for verification.') }}', 25, y + 10);
-                    doc.text('- {{ recommendation_2|default('Compare with reputable news outlets.') }}', 25, y + 20);
-                    doc.text('- {{ recommendation_3|default('Evaluate author credentials.') }}', 25, y + 30);
+                    doc.text('- {{ recommendation_1|default('Cross-reference with primary sources.') }}', 25, y + 10);
+                    doc.text('- {{ recommendation_2|default('Verify with reputable news outlets.') }}', 25, y + 20);
+                    doc.text('- {{ recommendation_3|default('Check author and publication credibility.') }}', 25, y + 30);
 
                     // Save PDF
                     doc.save('TruthChecker_Report.pdf');
