@@ -3,520 +3,454 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Truth Checker - Advanced Fake News Detection</title>
+    <meta name="description" content="Truth Checker: AI-powered fake news detection tool analyzing text, images, documents, and URLs.">
+    <title>Truth Checker - AI Fake News Detector</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
-    <header class="bg-blue-700 text-white text-center py-8 shadow-lg">
-        <div class="container mx-auto px-4">
-            <h1 class="text-4xl font-bold mb-2">Truth Checker</h1>
-            <p class="text-xl">Advanced Fake News Detection Tool</p>
-            <div class="mt-4 max-w-2xl mx-auto">
-                <div class="bg-blue-600 rounded-lg p-3 text-sm">
-                    Our AI model analyzes linguistic patterns, content structure, and semantic features 
-                    to assess the credibility of news content from text, images, documents, or links
-                </div>
-            </div>
+<body class="bg-gray-100 text-gray-900 flex flex-col min-h-screen font-sans">
+    <header class="bg-gradient-to-r from-blue-700 to-blue-900 text-white py-10 shadow-lg">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-3 tracking-tight">Truth Checker</h1>
+            <p class="text-lg md:text-xl max-w-2xl mx-auto">Instantly verify news credibility with our AI-powered analysis of text, images, documents, and URLs.</p>
         </div>
     </header>
-            
-    <nav class="bg-blue-800 text-white py-2">
+
+    <nav class="bg-blue-800 text-white py-4 sticky top-0 z-10 shadow-md">
         <div class="container mx-auto px-4 flex justify-center space-x-6">
-            <a href="#" class="hover:underline py-1">Home</a>
-            <a href="#" class="hover:underline py-1">How It Works</a>
-            <a href="#" class="hover:underline py-1">Recent Checks</a>
-            <a href="#" class="hover:underline py-1">FAQ</a>
+            <a href="/" class="px-3 py-2 rounded-md hover:bg-blue-700 transition duration-200 font-medium" aria-current="page">Home</a>
+            <a href="#how-it-works" class="px-3 py-2 rounded-md hover:bg-blue-700 transition duration-200 font-medium">How It Works</a>
+            <a href="#faq" class="px-3 py-2 rounded-md hover:bg-blue-700 transition duration-200 font-medium">FAQ</a>
         </div>
     </nav>
-     
-    <div class="container mx-auto px-4 max-w-5xl my-8 flex-grow">
-        <div class="bg-white rounded-lg shadow-md p-8 mb-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Analyze News Content</h2>
-            <p class="mb-6 text-gray-600">Submit news content via text, image (jpg, png), document (docx, pdf), or URL to check its credibility using our advanced AI algorithms. Our model analyzes various features to identify potentially misleading information.</p>
-            
-            <form id="newsForm" action="/" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
-                <div class="mb-6">
-                    <label for="newsText" class="block font-bold mb-2 text-gray-700">Enter news text for analysis:</label>
-                    <textarea 
-                        id="newsText" 
-                        name="txt" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[150px]" 
-                        rows="6" 
-                        placeholder="Paste or type the news text you want to verify..."
-                        aria-describedby="textHelp">{{ request.form['txt'] if request.form['txt'] }}</textarea>
+
+    <main class="container mx-auto px-4 max-w-6xl py-10 flex-grow">
+        <section class="bg-white rounded-2xl shadow-xl p-8 mb-10">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Verify News Content</h2>
+            <p class="text-gray-600 mb-6 max-w-2xl">Enter news content through text, images (jpg, png), documents (docx, pdf), or URLs to check its authenticity using our advanced AI model.</p>
+
+            <form id="newsForm" action="/" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <div>
+                    <label for="newsText" class="block text-sm font-semibold text-gray-700 mb-2">News Text</label>
+                    <textarea
+                        id="newsText"
+                        name="txt"
+                        rows="5"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                        placeholder="Paste or type the news content..."
+                        aria-describedby="textHelp"
+                        maxlength="10000">{{ request.form['txt'] if request.form['txt'] else '' }}</textarea>
+                    <p id="textHelp" class="mt-1 text-xs text-gray-500">Enter up to 10,000 characters of news text.</p>
                 </div>
-                
-                <div class="mb-6">
-                    <label for="newsImage" class="block font-bold mb-2 text-gray-700">Upload news image (jpg, png):</label>
-                    <input 
-                        type="file" 
-                        id="newsImage" 
-                        name="image" 
-                        accept="image/jpeg,image/png" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+
+                <div>
+                    <label for="newsImage" class="block text-sm font-semibold text-gray-700 mb-2">News Image</label>
+                    <input
+                        type="file"
+                        id="newsImage"
+                        name="image"
+                        accept="image/jpeg,image/png"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-50 focus:ring-2 focus:ring-blue-500"
                         aria-describedby="imageHelp">
-                    <div id="imageHelp" class="mt-2 text-sm text-gray-500">
-                        Upload screenshots or images containing news content. Max size: 5MB.
-                    </div>
+                    <p id="imageHelp" class="mt-1 text-xs text-gray-500">Upload jpg or png images (max 5MB).</p>
                 </div>
-                
-                <div class="mb-6">
-                    <label for="newsDoc" class="block font-bold mb-2 text-gray-700">Upload document (docx, pdf):</label>
-                    <input 
-                        type="file" 
-                        id="newsDoc" 
-                        name="document" 
-                        accept=".docx,application/pdf" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+
+                <div>
+                    <label for="newsDoc" class="block text-sm font-semibold text-gray-700 mb-2">News Document</label>
+                    <input
+                        type="file"
+                        id="newsDoc"
+                        name="document"
+                        accept=".docx,application/pdf"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-50 focus:ring-2 focus:ring-blue-500"
                         aria-describedby="docHelp">
-                    <div id="docHelp" class="mt-2 text-sm text-gray-500">
-                        Upload news articles in docx or pdf format. Max size: 10MB.
-                    </div>
+                    <p id="docHelp" class="mt-1 text-xs text-gray-500">Upload docx or pdf files (max 10MB).</p>
                 </div>
-                
-                <div class="mb-6">
-                    <label for="newsUrl" class="block font-bold mb-2 text-gray-700">Enter news URL:</label>
-                    <input 
-                        type="url" 
-                        id="newsUrl" 
-                        name="url" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                        placeholder="https://example.com/news-article" 
-                        aria-describedby="urlHelp">
-                    <div id="urlHelp" class="mt-2 text-sm text-gray-500">
-                        Provide a direct link to the news article online.
-                    </div>
+
+                <div>
+                    <label for="newsUrl" class="block text-sm font-semibold text-gray-700 mb-2">News URL</label>
+                    <input
+                        type="url"
+                        id="newsUrl"
+                        name="url"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                        placeholder="https://example.com/news"
+                        aria-describedby="urlHelp"
+                        value="{{ request.form['url'] if request.form['url'] else '' }}">
+                    <p id="urlHelp" class="mt-1 text-xs text-gray-500">Enter a valid news article URL.</p>
                 </div>
-                
-                <div class="flex flex-wrap items-center gap-4">
-                    <button type="submit" name="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                        Analyze Content
-                    </button>
-                    <button type="button" id="clearButton" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-6 rounded-md transition duration-200">
-                        Clear
-                    </button>
-                    <div class="text-sm text-gray-500 ml-auto">
-                        Analysis takes approximately 2-10 seconds
-                    </div>
-                </div>
-                
-                <div id="formError" class="hidden mt-4 p-4 bg-red-50 border border-red-300 rounded-lg text-sm text-red-700">
+
+                <div id="formError" class="hidden p-4 bg-red-100 border border-red-300 rounded-lg text-sm text-red-700">
                     Please provide at least one input (text, image, document, or URL).
                 </div>
+
+                <div class="flex flex-wrap items-center gap-4">
+                    <button
+                        type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        onclick="showLoading()">
+                        <i class="fas fa-search mr-2"></i> Analyze Now
+                    </button>
+                    <button
+                        type="button"
+                        id="clearButton"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition duration-200 focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                        Clear Inputs
+                    </button>
+                </div>
             </form>
-            
-            <div id="loadingIndicator" class="hidden text-center my-8 py-6">
-                <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-blue-600"></div>
-                <p class="mt-4 text-lg">Analyzing content...</p>
-                <p class="text-sm text-gray-500 mt-2">Our AI model is processing the input</p>
+
+            <div id="loadingIndicator" class="hidden text-center my-8">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-100 border-t-blue-600"></div>
+                <p class="mt-4 text-lg font-medium text-gray-700">Analyzing content...</p>
+                <p class="text-sm text-gray-500">This may take a few seconds.</p>
             </div>
-        </div>
-        
+        </section>
+
         {% if request.method == 'POST' and (request.form['txt'] or request.files['image'] or request.files['document'] or request.form['url']) %}
-        <div class="bg-white rounded-lg shadow-md p-8 mb-8">
-            <h3 class="text-2xl font-bold text-gray-800 mb-6">Analysis Results</h3>
-            
+        <section class="bg-white rounded-2xl shadow-xl p-8 mb-10">
+            <h3 class="text-3xl font-bold text-gray-800 mb-6">Analysis Results</h3>
+
             <div class="mb-8">
-                <h4 class="text-lg font-semibold mb-3 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Analyzed Content:
+                <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-file-alt mr-2 text-blue-600"></i> Input Content
                 </h4>
-                {% if request.form['txt'] %}
-                <div class="bg-gray-50 p-5 rounded-md border border-gray-200 whitespace-pre-wrap break-words text-gray-700">{{ request.form['txt'] }}</div>
-                {% endif %}
-                {% if request.files['image'] %}
-                <div class="bg-gray-50 p-5 rounded-md border border-gray-200">
-                    <img src="{{ image_url }}" alt="Uploaded news image" class="max-w-full h-auto rounded-md">
-                </div>
-                {% endif %}
-                {% if request.files['document'] %}
-                <div class="bg-gray-50 p-5 rounded-md border border-gray-200">
-                    <p class="text-gray-700">Document: {{ document_name }}</p>
-                    <a href="{{ document_url }}" class="text-blue-600 hover:underline" target="_blank">View Document</a>
-                </div>
-                {% endif %}
-                {% if request.form['url'] %}
-                <div class="bg-gray-50 p-5 rounded-md border border-gray-200">
-                    <a href="{{ request.form['url'] }}" class="text-blue-600 hover:underline break-all" target="_blank">{{ request.form['url'] }}</a>
-                </div>
-                {% endif %}
-                <div class="mt-2 text-sm text-gray-500 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Analysis timestamp: {{ timestamp|default(current_time) }}
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                    {% if request.form['txt'] %}
+                    <div class="mb-4">
+                        <p class="font-medium text-gray-700">Text Input:</p>
+                        <p class="text-gray-600 whitespace-pre-wrap break-words">{{ request.form['txt'] }}</p>
+                    </div>
+                    {% endif %}
+                    {% if image_url %}
+                    <div class="mb-4">
+                        <p class="font-medium text-gray-700">Image Input:</p>
+                        <img src="{{ image_url }}" alt="Uploaded news image" class="max-w-full h-auto rounded-lg mt-2">
+                    </div>
+                    {% endif %}
+                    {% if document_url %}
+                    <div class="mb-4">
+                        <p class="font-medium text-gray-700">Document Input:</p>
+                        <p class="text-gray-600">{{ document_name }}</p>
+                        <a href="{{ document_url }}" class="text-blue-600 hover:underline mt-1 inline-block" target="_blank">View Document</a>
+                    </div>
+                    {% endif %}
+                    {% if request.form['url'] %}
+                    <div>
+                        <p class="font-medium text-gray-700">URL Input:</p>
+                        <a href="{{ request.form['url'] }}" class="text-blue-600 hover:underline break-all" target="_blank">{{ request.form['url'] }}</a>
+                    </div>
+                    {% endif %}
+                    <p class="mt-4 text-sm text-gray-500 flex items-center">
+                        <i class="fas fa-clock mr-1"></i> Analyzed on: {{ timestamp|default(current_time) }}
+                    </p>
                 </div>
             </div>
-            
+
             <div class="mb-8">
-                <h4 class="text-xl font-semibold mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    Credibility Assessment:
+                <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-shield-alt mr-2 text-blue-600"></i> Credibility Assessment
                 </h4>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="md:col-span-2">
-                        {% if result is defined and result <= 50 %}
-                            <div class="p-6 rounded-md text-center font-bold text-xl bg-red-50 border-2 border-red-500 text-red-600">
-                                <span role="img" aria-label="Warning">⚠️</span> LIKELY FAKE NEWS
-                                <p class="text-sm font-normal mt-2">Our analysis detected several indicators of misleading content</p>
-                            </div>
-                            <div class="mt-4 p-4 bg-red-50 rounded-md border border-red-200">
-                                <h5 class="font-semibold text-red-800 mb-2">Fake News Probability</h5>
-                                <p class="text-sm text-red-700">Probability of being fake: {{ "%.1f"|format(probabilities.fake|default(65)) }}%</p>
-                                <h6 class="text-sm font-semibold mt-3 mb-2">Contributing Factors:</h6>
-                                <ul class="text-sm text-red-700 pl-5 list-disc space-y-1">
-                                    {% for factor in fake_factors|default(['Sensationalist language', 'Lack of source attribution', 'Emotional manipulation']) %}
-                                        <li>{{ factor }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2">
+                        {% if result is defined and result == 0 %}
+                        <div class="p-6 rounded-lg bg-red-50 border-2 border-red-500 text-center">
+                            <p class="text-2xl font-bold text-red-600 flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle mr-2"></i> Likely Fake News
+                            </p>
+                            <p class="text-sm text-red-600 mt-2">Our AI detected indicators of misleading content.</p>
+                        </div>
+                        <div class="mt-4 p-6 bg-red-50 rounded-lg border border-red-200">
+                            <h5 class="font-semibold text-red-800 mb-3">Potential Issues</h5>
+                            <ul class="text-sm text-red-700 list-disc pl-5 space-y-2">
+                                {% for factor in fake_factors %}
+                                <li>{{ factor }}</li>
+                                {% else %}
+                                <li>No specific factors identified</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                         {% else %}
-                            <div class="p-6 rounded-md text-center font-bold text-xl bg-green-50 border-2 border-green-500 text-green-600">
-                                <span role="img" aria-label="Verified">✓</span> LIKELY RELIABLE
-                                <p class="text-sm font-normal mt-2">This content aligns with credible journalism standards</p>
-                            </div>
-                            <div class="mt-4 p-4 bg-green-50 rounded-md border border-green-200">
-                                <h5 class="font-semibold text-green-800 mb-2">References & Sources</h5>
-                                <ul class="text-sm text-green-700 pl-5 list-disc space-y-1">
-                                    {% for ref in references|default(['Source: BBC News (https://www.bbc.com)', 'Source: Reuters (https://www.reuters.com)', 'Platform: Official Government Website']) %}
-                                        <li>{{ ref }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
+                        <div class="p-6 rounded-lg bg-green-50 border-2 border-green-500 text-center">
+                            <p class="text-2xl font-bold text-green-600 flex items-center justify-center">
+                                <i class="fas fa-check-circle mr-2"></i> Likely Reliable
+                            </p>
+                            <p class="text-sm text-green-600 mt-2">Content aligns with credible journalism standards.</p>
+                        </div>
+                        <div class="mt-4 p-6 bg-green-50 rounded-lg border border-green-200">
+                            <h5 class="font-semibold text-green-800 mb-3">Source References</h5>
+                            <ul class="text-sm text-green-700 list-disc pl-5 space-y-2">
+                                {% for ref in references %}
+                                <li>{{ ref }}</li>
+                                {% else %}
+                                <li>No verified sources identified</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                         {% endif %}
-                        
-                        <!-- Confidence Meter -->
+
                         <div class="mt-6">
-                            <div class="flex justify-between mb-2">
-                                <span class="text-sm font-medium">Model Confidence Level</span>
-                                <span class="text-sm font-bold">
-                                    {{ "%.1f"|format(confidence|default(75.5)) }}%
-                                </span>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-semibold text-gray-700">Model Confidence</span>
+                                <span class="text-sm font-bold text-gray-800">{{ "%.1f"|format(confidence|default(75)) }}%</span>
                             </div>
-                            <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full {{ 'bg-red-500' if (result is defined and result <= 60) else 'bg-green-500' }} rounded-full" 
-                                     style="width: {{ confidence|default(75.5) }}%"></div>
+                            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full {{ 'bg-red-500' if result == 0 else 'bg-green-500' }} rounded-full transition-all duration-500" style="width: {{ confidence|default(75) }}%"></div>
                             </div>
-                            <div class="mt-1 text-xs text-gray-500 italic">Based on {{ analysis_data_points|default(12) }} features</div>
+                            <p class="mt-1 text-xs text-gray-500">Based on {{ analysis_data_points|default(10) }} analyzed features</p>
                         </div>
                     </div>
-                    
-                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                        <h5 class="font-semibold text-center mb-3">Truth Score</h5>
-                        <div class="relative">
-                            <canvas id="truthMeter" width="150" height="150"></canvas>
+
+                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 flex flex-col items-center">
+                        <h5 class="font-semibold text-gray-800 mb-4">Truth Score</h5>
+                        <div class="relative w-40 h-40">
+                            <canvas id="truthMeter"></canvas>
                             <div class="absolute inset-0 flex items-center justify-center">
                                 <div class="text-center">
-                                    <div class="text-3xl font-bold">
-                                        {{ "%.0f"|format(probabilities.real|default(65)) }}
-                                    </div>
-                                    <div class="text-xs">out of 100</div>
+                                    <p class="text-3xl font-bold text-gray-800">{{ "%.0f"|format(probabilities.real|default(75)) }}</p>
+                                    <p class="text-xs text-gray-600">/100</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Detailed Analysis (Retained from original) -->
-            <div class="mt-8">
-                <h4 class="text-xl font-semibold mb-4">Detailed Analysis</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="p-5 bg-white border rounded-lg shadow-sm">
-                        <h5 class="font-bold mb-3 text-blue-800">Language Patterns</h5>
-                        <div class="space-y-4">
-                            <div>
-                                <h6 class="text-sm font-semibold flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Sentiment
-                                </h6>
-                                <div class="flex items-center mt-1">
-                                    <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ sentiment_score|default(48) }}%"></div>
-                                    </div>
-                                    <span class="text-xs font-medium">{{ sentiment_label|default('Neutral') }}</span>
-                                </div>
-                            </div>
-                            <div>
-                                <h6 class="text-sm font-semibold flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Emotional Language
-                                </h6>
-                                <div class="flex items-center mt-1">
-                                    <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ emotional_score|default(35) }}%"></div>
-                                    </div>
-                                    <span class="text-xs font-medium">{{ emotional_label|default('Low') }}</span>
-                                </div>
-                            </div>
-                            <div>
-                                <h6 class="text-sm font-semibold flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                                    </svg>
-                                    Sensationalism
-                                </h6>
-                                <div class="flex items-center mt-1">
-                                    <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ sensationalism_score|default(30) }}%"></div>
-                                    </div>
-                                    <span class="text-xs font-medium">{{ sensationalism_label|default('Low') }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-5 bg-white border rounded-lg shadow-sm">
-                        <h5 class="font-bold mb-3 text-blue-800">Content Structure</h5>
-                        <div class="space-y-4">
-                            <div>
-                                <h6 class="text-sm font-semibold flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Complexity
-                                </h6>
-                                <div class="flex items-center mt-1">
-                                    <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ complexity_score|default(72) }}%"></div>
-                                    </div>
-                                    <span class="text-xs font-medium">{{ complexity_label|default('Moderate') }}</span>
-                                </div>
-                            </div>
-                            <div>
-                                <h6 class="text-sm font-semibold flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Bias Level
-                                </h6>
-                                <div class="flex items-center mt-1">
-                                    <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ bias_score|default(35) }}%"></div>
-                                    </div>
-                                    <span class="text-xs font-medium">{{ bias_label|default('Low') }}</span>
-                                </div>
-                            </div>
-                            <div>
-                                <h6 class="text-sm font-semibold flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                                    </svg>
-                                    Source Transparency
-                                </h6>
-                                <div class="flex items-center mt-1">
-                                    <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ source_transparency_score|default(68) }}%"></div>
-                                    </div>
-                                    <span class="text-xs font-medium">{{ source_transparency_label|default('Good') }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Recommendations -->
-            <div class="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 class="text-lg font-semibold mb-3 text-blue-800 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Recommendations
+
+            <div class="mb-8">
+                <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-bar mr-2 text-blue-600"></i> Detailed Analysis
                 </h4>
-                <ul class="mt-2 space-y-2 text-sm text-blue-800">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <h5 class="font-semibold text-blue-800 mb-4">Language Metrics</h5>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-semibold flex items-center">
+                                        <i class="fas fa-smile mr-1 text-blue-600"></i> Sentiment
+                                    </span>
+                                    <span class="text-xs font-medium text-gray-600">{{ sentiment_label|default('Neutral') }}</span>
+                                </div>
+                                <div class="mt-2 h-2 bg-gray-200 rounded-full">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: {{ sentiment_score|default(50) }}%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-semibold flex items-center">
+                                        <i class="fas fa-heart mr-1 text-blue-600"></i> Sensationalism
+                                    </span>
+                                    <span class="text-xs font-medium text-gray-600">{{ sensationalism_label|default('Low') }}</span>
+                                </div>
+                                <div class="mt-2 h-2 bg-gray-200 rounded-full">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: {{ sensationalism_score|default(30) }}%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-semibold flex items-center">
+                                        <i class="fas fa-book mr-1 text-blue-600"></i> Readability
+                                    </span>
+                                    <span class="text-xs font-medium text-gray-600">{{ readability_label|default('Good') }}</span>
+                                </div>
+                                <div class="mt-2 h-2 bg-gray-200 rounded-full">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: {{ readability_score|default(70) }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <h5 class="font-semibold text-blue-800 mb-4">Content Metrics</h5>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-semibold flex items-center">
+                                        <i class="fas fa-layer-group mr-1 text-blue-600"></i> Complexity
+                                    </span>
+                                    <span class="text-xs font-medium text-gray-600">{{ complexity_label|default('Moderate') }}</span>
+                                </div>
+                                <div class="mt-2 h-2 bg-gray-200 rounded-full">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: {{ complexity_score|default(72) }}%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-semibold flex items-center">
+                                        <i class="fas fa-balance-scale mr-1 text-blue-600"></i> Credibility
+                                    </span>
+                                    <span class="text-xs font-medium text-gray-600">{{ credibility_label|default('High') }}</span>
+                                </div>
+                                <div class="mt-2 h-2 bg-gray-200 rounded-full">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: {{ credibility_score|default(70) }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 class="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+                    <i class="fas fa-lightbulb mr-2"></i> Recommendations
+                </h4>
+                <ul class="space-y-3 text-sm text-blue-800">
                     <li class="flex items-start">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>{{ recommendation_1|default('Cross-reference with established news sources or fact-checking websites.') }}</span>
+                        <i class="fas fa-check-circle mr-2 text-blue-600 mt-1"></i>
+                        {{ recommendation_1|default('Check primary sources for verification.') }}
                     </li>
                     <li class="flex items-start">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>{{ recommendation_2|default('Verify the credibility of the source or author.') }}</span>
+                        <i class="fas fa-check-circle mr-2 text-blue-600 mt-1"></i>
+                        {{ recommendation_2|default('Compare with reputable news outlets.') }}
                     </li>
                     <li class="flex items-start">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>{{ recommendation_3|default('Seek multiple perspectives for a balanced understanding.') }}</span>
+                        <i class="fas fa-check-circle mr-2 text-blue-600 mt-1"></i>
+                        {{ recommendation_3|default('Evaluate author credentials.') }}
                     </li>
                 </ul>
             </div>
-        </div>
+        </section>
         {% endif %}
-        
-        <div class="bg-white rounded-lg shadow-md p-8 mb-8">
-            <h3 class="text-2xl font-bold text-gray-800 mb-6">How Our AI Detection Works</h3>
+
+        <section id="how-it-works" class="bg-white rounded-2xl shadow-xl p-8 mb-10">
+            <h3 class="text-3xl font-bold text-gray-800 mb-6">How It Works</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h4 class="text-lg font-semibold mb-3 text-blue-700 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                        Multi-Input Analysis
+                    <h4 class="text-lg font-semibold text-blue-700 mb-3 flex items-center">
+                        <i class="fas fa-cogs mr-2"></i> Multi-Input Processing
                     </h4>
-                    <p class="text-gray-600">Our AI processes multiple input types to assess credibility:</p>
-                    <ul class="mt-2 space-y-1 text-gray-600 pl-5 list-disc">
-                        <li>Text: Linguistic patterns and sentiment analysis</li>
-                        <li>Images: OCR and visual content verification</li>
-                        <li>Documents: Text extraction and structural analysis</li>
-                        <li>URLs: Web content scraping and source validation</li>
+                    <p class="text-gray-600 mb-4">Our AI analyzes various input types for comprehensive assessment:</p>
+                    <ul class="space-y-2 text-gray-600 list-disc pl-5">
+                        <li><strong>Text:</strong> Analyzes linguistic patterns and sentiment</li>
+                        <li><strong>Images:</strong> Extracts text via OCR for content verification</li>
+                        <li><strong>Documents:</strong> Processes docx/pdf for structural analysis</li>
+                        <li><strong>URLs:</strong> Scrapes web content and validates sources</li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-lg font-semibold mb-3 text-blue-700 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z" />
-                        </svg>
-                        Credibility Assessment
+                    <h4 class="text-lg font-semibold text-blue-700 mb-3 flex items-center">
+                        <i class="fas fa-check-double mr-2"></i> Credibility Evaluation
                     </h4>
-                    <p class="text-gray-600">Our model evaluates content for reliability by analyzing:</p>
-                    <ul class="mt-2 space-y-1 text-gray-600 pl-5 list-disc">
-                        <li>Source transparency and attribution</li>
-                        <li>Presence of emotional or sensationalist language</li>
-                        <li>Balance of perspectives</li>
-                        <li>Consistency with verified sources</li>
+                    <p class="text-gray-600 mb-4">We assess content reliability through:</p>
+                    <ul class="space-y-2 text-gray-600 list-disc pl-5">
+                        <li>Source attribution and transparency</li>
+                        <li>Presence of sensational or biased language</li>
+                        <li>Consistency with verified information</li>
+                        <li>Structural and linguistic integrity</li>
                     </ul>
                 </div>
             </div>
-            
-            <div class="mt-8 text-center">
-                <p class="text-sm text-gray-500 max-w-2xl mx-auto">
-                    <strong>Note:</strong> This tool provides an automated assessment based on patterns associated with reliable vs. unreliable content. 
-                    Always verify information with multiple sources.
-                </p>
-            </div>
-        </div>
-    </div>
-    
-    <footer class="bg-gray-800 text-white py-10 mt-auto">
+            <p class="mt-6 text-sm text-gray-500 text-center max-w-2xl mx-auto">
+                <strong>Note:</strong> This tool provides an AI-driven assessment. Always cross-verify with multiple reputable sources for critical decisions.
+            </p>
+        </section>
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 mt-auto">
         <div class="container mx-auto px-4">
-            <div class="flex flex-wrap justify-between">
-                <div class="w-full md:w-1/3 mb-6 md:mb-0">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
                     <h3 class="text-xl font-bold mb-4">Truth Checker</h3>
-                    <p class="text-gray-300 text-sm">
-                        An advanced tool for detecting misleading information online.
-                        Promoting media literacy and critical thinking.
-                    </p>
+                    <p class="text-gray-300 text-sm">Empowering users to combat misinformation with AI-driven news verification.</p>
                 </div>
-                <div class="w-full md:w-1/4 mb-6 md:mb-0">
-                    <h4 class="font-bold mb-4">Quick Links</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-300 hover:text-white transition">API Access</a></li>
-                        <li><a href="#" class="text-gray-300 hover:text-white transition">Developer Resources</a></li>
-                        <li><a href="#" class="text-gray-300 hover:text-white transition">Research Papers</a></li>
-                        <li><a href="#" class="text-gray-300 hover:text-white transition">Case Studies</a></li>
-                    </ul>
-                </div>
-                <div class="w-full md:w-1/4">
-                    <h4 class="font-bold mb-4">Learn More</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-300 hover:text-white transition">About Our Model</a></li>
-                        <li><a href="#" class="text-gray-300 hover:text-white transition">Media Literacy Tips</a></li>
-                        <li><a href="#" class="text-gray-300 hover:text-white transition">Verification Techniques</a></li>
+                <div>
+                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#how-it-works" class="text-gray-300 hover:text-white transition">How It Works</a></li>
+                        <li><a href="#faq" class="text-gray-300 hover:text-white transition">FAQ</a></li>
                         <li><a href="#" class="text-gray-300 hover:text-white transition">Contact Us</a></li>
                     </ul>
                 </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="text-gray-300 hover:text-white transition">Media Literacy Tips</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition">Verification Guides</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="border-t border-gray-700 mt-8 pt-8 text-sm text-gray-400 text-center">
-                <p>© 2025 Truth Checker. All rights reserved.</p>
+            <div class="mt-8 pt-8 border-t border-gray-800 text-center text-sm text-gray-400">
+                <p>&copy; 2025 Truth Checker. All rights reserved.</p>
             </div>
         </div>
     </footer>
-    
+
     <script>
+        // Form submission and loading state
         function showLoading() {
-            const form = document.getElementById('newsForm');
             const text = document.getElementById('newsText').value.trim();
             const image = document.getElementById('newsImage').files[0];
             const doc = document.getElementById('newsDoc').files[0];
             const url = document.getElementById('newsUrl').value.trim();
             const errorDiv = document.getElementById('formError');
-            
-            // Validate that at least one input is provided
+
             if (!text && !image && !doc && !url) {
                 errorDiv.classList.remove('hidden');
                 return false;
             }
-            
+
             errorDiv.classList.add('hidden');
             document.getElementById('loadingIndicator').classList.remove('hidden');
             return true;
         }
-        
-        // Clear button functionality
-        document.getElementById('clearButton').addEventListener('click', function() {
+
+        // Clear form inputs
+        document.getElementById('clearButton').addEventListener('click', () => {
             const form = document.getElementById('newsForm');
-            const errorDiv = document.getElementById('formError');
-            
-            // Reset all form fields
             form.reset();
-            
-            // Explicitly clear file inputs (some browsers don't clear file inputs with form.reset())
             document.getElementById('newsImage').value = '';
             document.getElementById('newsDoc').value = '';
-            document.getElementById('newsText').value = '';
-            document.getElementById('newsUrl').value = '';
-            
-            // Hide error message if visible
-            errorDiv.classList.add('hidden');
+            document.getElementById('formError').classList.add('hidden');
         });
-        
-        // File input validation
-        document.getElementById('newsImage').addEventListener('change', function(e) {
+
+        // File size validation
+        document.getElementById('newsImage').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file && file.size > 5 * 1024 * 1024) {
                 alert('Image file size exceeds 5MB limit.');
                 e.target.value = '';
             }
         });
-        
-        document.getElementById('newsDoc').addEventListener('change', function(e) {
+
+        document.getElementById('newsDoc').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file && file.size > 10 * 1024 * 1024) {
                 alert('Document file size exceeds 10MB limit.');
                 e.target.value = '';
             }
         });
-        
-        // Initialize truth meter chart if results are shown
-        window.onload = function() {
+
+        // URL validation
+        document.getElementById('newsUrl').addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            const errorDiv = document.getElementById('formError');
+            if (url && !/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(url)) {
+                errorDiv.textContent = 'Please enter a valid URL (e.g., https://example.com).';
+                errorDiv.classList.remove('hidden');
+            } else {
+                errorDiv.classList.add('hidden');
+            }
+        });
+
+        // Initialize truth meter chart
+        document.addEventListener('DOMContentLoaded', () => {
             const truthMeterCanvas = document.getElementById('truthMeter');
             if (truthMeterCanvas) {
                 const ctx = truthMeterCanvas.getContext('2d');
-                const truthScore = {{ probabilities.real|default(65) }};
-                
+                const truthScore = {{ probabilities.real|default(75) }};
+
                 new Chart(ctx, {
                     type: 'doughnut',
                     data: {
                         datasets: [{
                             data: [truthScore, 100 - truthScore],
-                            backgroundColor: [
-                                truthScore > 50 ? '#10B981' : '#EF4444',
-                                '#E5E7EB'
-                            ],
+                            backgroundColor: [truthScore > 50 ? '#10B981' : '#EF4444', '#E5E7EB'],
                             borderWidth: 0
                         }]
                     },
                     options: {
-                        cutout: '70%',
+                        cutout: '75%',
                         responsive: true,
-                        maintainAspectRatio: true,
                         plugins: {
                             legend: { display: false },
                             tooltip: { enabled: false }
@@ -524,7 +458,7 @@
                     }
                 });
             }
-        };
+        });
     </script>
 </body>
 </html>
